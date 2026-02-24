@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+        "postgres": {
+            "command": "[PATH_TO_YOUR_VENV_PYTHON_EXE]",
+            "args": [
+                "[PATH_TO_YOUR_PROJECT_ROOT]/main.py"
+            ],
+            "cwd": "[PATH_TO_YOUR_PROJECT_ROOT]",
+            "env": {
+                "PYTHONPATH": "[PATH_TO_YOUR_PROJECT_ROOT]"
+            }
+        }
+    }
+}
