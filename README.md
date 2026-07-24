@@ -22,8 +22,8 @@ Connect **Claude Desktop** to your PostgreSQL database using the [Model Context 
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/sarotechhub/Claude-Desktop-to-PostgreSQL.git
-cd Cluade-MCP-PostgreSQL
+git clone https://github.com/User-Gold/PostgreSQL-MCP.git
+cd PostgreSQL-MCP
 ```
 
 ### 2. Create a Virtual Environment
@@ -254,4 +254,4 @@ MIT License — free to use, modify, and distribute.
 ## 🤝 Contributing
 
 Pull requests welcome! Please fork the repo, create a feature branch, and submit a PR with a clear description.
-# Claude-Desktop-to-PostgreSQL
+# PostgreSQL-MCP
