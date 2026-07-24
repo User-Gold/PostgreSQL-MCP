@@ -66,23 +66,57 @@ ALLOW_WRITE_OPERATIONS=false
 
 > **All credentials live only in `.env`** — they are never put in the Claude Desktop config file.
 
-### 5. Test the Server
+---
+
+## ▶️ Running the Server
+
+There are two ways to run this server. Use **Option A** to verify everything works before wiring it into Claude Desktop. Use **Option B** for actual day-to-day use with Claude.
+
+### Option A — Run locally in a terminal (sanity check only)
+
+This confirms your DB connection and dependencies are correct. It does **not** give you an interactive chat — the server speaks the MCP protocol over stdio, so it just sits there waiting for a client (Claude Desktop) to talk to it.
 
 ```bash
+# 1. Activate the venv (skip if already active)
+# Windows:
+.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+
+# 2. Run the server directly
 python main.py
 ```
 
-You should see:
+Expected output:
 ```
 🚀 Starting PostgreSQL MCP Server...
 ✅ Database connection pool ready.
 ```
 
-Press `Ctrl+C` to stop.
+- If you see this with no errors → your `.env` credentials and dependencies are good.
+- The process will appear to "hang" — that's normal, it's listening on stdio for MCP messages.
+- Press `Ctrl+C` to stop it.
+- If it fails here, fix the error **before** moving to Option B — Claude Desktop will show the same failure but with far less detail in its logs.
 
-### 6. Connect to Claude Desktop
+### Option B — Run through Claude Desktop (normal usage)
 
-**Find your Claude Desktop config file:**
+Claude Desktop launches `main.py` for you automatically using the exact same venv Python — you never run `python main.py` yourself day-to-day once this is set up.
+
+**1. Get the absolute paths you'll need** (from the project root):
+
+```bash
+# Windows (from an activated venv, in the project folder)
+where python
+cd
+```
+```bash
+# macOS/Linux
+which python
+pwd
+```
+Note down: the venv's `python`/`python.exe` path, and the project's absolute root folder path.
+
+**2. Open your Claude Desktop config file:**
 
 | OS | Path |
 |---|---|
@@ -90,26 +124,78 @@ Press `Ctrl+C` to stop.
 | macOS | `~/Library/Application Support/Claude/claude_desktop_config.json` |
 | Linux | `~/.config/Claude/claude_desktop_config.json` |
 
-**Add the `postgres` block** to the `mcpServers` section (update the path):
+**3. Add the `postgres` block** to the `mcpServers` section, using the paths from step 1 (Windows example — note the double backslashes `\\`):
 
 ```json
 {
   "mcpServers": {
     "postgres": {
-      "command": "[PATH_TO_YOUR_VENV_PYTHON_EXE]",
-      "args": ["[PATH_TO_YOUR_PROJECT_ROOT]\\main.py"],
-      "cwd": "[PATH_TO_YOUR_PROJECT_ROOT]",
+      "command": "C:\\path\\to\\Claude-Desktop-to-PostgreSQL-main\\.venv\\Scripts\\python.exe",
+      "args": ["C:\\path\\to\\Claude-Desktop-to-PostgreSQL-main\\main.py"],
+      "cwd": "C:\\path\\to\\Claude-Desktop-to-PostgreSQL-main",
       "env": {
-        "PYTHONPATH": "[PATH_TO_YOUR_PROJECT_ROOT]"
+        "PYTHONPATH": "C:\\path\\to\\Claude-Desktop-to-PostgreSQL-main"
       }
     }
   }
 }
 ```
 
-> **Note:** No DB credentials go in this file. The server reads them automatically from your `.env` file using `python-dotenv`.
+macOS/Linux example (forward slashes, no escaping needed):
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "/path/to/Claude-Desktop-to-PostgreSQL-main/.venv/bin/python",
+      "args": ["/path/to/Claude-Desktop-to-PostgreSQL-main/main.py"],
+      "cwd": "/path/to/Claude-Desktop-to-PostgreSQL-main",
+      "env": {
+        "PYTHONPATH": "/path/to/Claude-Desktop-to-PostgreSQL-main"
+      }
+    }
+  }
+}
+```
 
-**Restart Claude Desktop** after saving the config.
+> **Note:** No DB credentials go in this file. The server reads them automatically from your `.env` file (in the project folder) using `python-dotenv` — `.env` is loaded because `cwd` points at the project root.
+
+**4. Fully quit and reopen Claude Desktop** (don't just close the window — quit it from the tray/menu bar so the config reloads).
+
+**5. Verify it connected:** Settings → Developer → MCP Servers → `postgres` should show as running with no error badge. Then in a new chat, ask Claude *"List all tables in my database"* — if it responds with real table names, you're connected.
+
+### Option C — Run via Docker (Claude Desktop container connector)
+
+Instead of pointing Claude Desktop at your venv's `python.exe`, you can run the server inside the provided `Dockerfile` and point Claude Desktop at `docker` instead. Claude Desktop then starts/attaches to the same container every time it needs the server.
+
+**1. Build the image** (run once, from the project root, next to the `Dockerfile`):
+```bash
+docker build -t postgres-mcp-server-image .
+```
+
+**2. Create the container** (run once — this bakes your `.env` credentials into the container's environment; it does **not** start the server yet):
+```bash
+docker create --name postgres-mcp-server --env-file .env -i postgres-mcp-server-image
+```
+- `--name postgres-mcp-server` — fixed name Claude Desktop will reference on every launch.
+- `--env-file .env` — passes your DB credentials in at creation time (never baked into the image itself).
+- If you ever change `.env`, you must recreate the container: `docker rm postgres-mcp-server` then repeat this step.
+
+**3. Register it in `claude_desktop_config.json`** (same file/paths as Option B, step 2) instead of the venv-python block:
+```json
+{
+  "mcpServers": {
+    "postgres": {
+      "command": "docker",
+      "args": ["start", "-ai", "postgres-mcp-server"]
+    }
+  }
+}
+```
+`docker start -ai postgres-mcp-server` starts the existing container and attaches stdin/stdout to it, which is exactly what Claude Desktop needs for stdio-based MCP.
+
+**4. Fully quit and reopen Claude Desktop.** Settings → Developer → MCP Servers → `postgres` should show **running** with command `docker` / args `start -ai postgres-mcp-server` (this is what your connector screenshot shows once it's wired up correctly).
+
+> Use Option B if you're actively developing the server (faster iteration, no rebuild step). Use Option C if you just want a self-contained, reproducible runtime that doesn't depend on your local Python/venv setup.
 
 ---
 
@@ -176,7 +262,7 @@ Once connected, try asking Claude:
 ## 📁 Project Structure
 
 ```
-Cluade-MCP-PostgreSQL/
+Claude-Desktop-to-PostgreSQL/
 ├── main.py                    # 🚀 MCP server entry point (FastMCP + stdio)
 ├── database.py                # 🔌 Async connection pool (asyncpg)
 ├── tools/
@@ -242,6 +328,7 @@ All configuration is done via `.env`:
 - Python 3.10+
 - PostgreSQL 12+
 - Claude Desktop (with MCP support)
+- Docker (only if using Option C — container-based setup)
 
 ---
 
@@ -254,4 +341,3 @@ MIT License — free to use, modify, and distribute.
 ## 🤝 Contributing
 
 Pull requests welcome! Please fork the repo, create a feature branch, and submit a PR with a clear description.
-# PostgreSQL-MCP
