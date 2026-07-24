@@ -1,0 +1,18 @@
+# MCP PostgreSQL Server — Dependencies
+# Install with: pip install -r requirements.txt
+
+# MCP SDK (includes FastMCP + CLI tools)
+mcp[cli]>=1.0.0
+
+# Async PostgreSQL driver
+asyncpg>=0.29.0
+
+# Environment variable loading
+python-dotenv>=1.0.0
+
+# Data validation
+pydantic>=2.0.0
+
+# For JSON serialization of Decimal/datetime types
+# (asyncpg returns native Python types, this helps with edge cases)
+orjson>=3.9.0

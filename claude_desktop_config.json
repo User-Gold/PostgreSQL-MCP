@@ -1,0 +1,14 @@
+{
+    "mcpServers": {
+        "postgres": {
+            "command": "C:\\Users\\Thangasamy\\BLOCK STACK PRIVATE LIMITED\\DB_Code_Point - Documents\\MCP SERVER\\Claude-Desktop-to-PostgreSQL-main\\.venv\\Scripts\\python.exe",
+            "args": [
+                "C:\\Users\\Thangasamy\\BLOCK STACK PRIVATE LIMITED\\DB_Code_Point - Documents\\MCP SERVER\\Claude-Desktop-to-PostgreSQL-main\\main.py"
+            ],
+            "cwd": "C:\\Users\\Thangasamy\\BLOCK STACK PRIVATE LIMITED\\DB_Code_Point - Documents\\MCP SERVER\\Claude-Desktop-to-PostgreSQL-main",
+            "env": {
+                "PYTHONPATH": "C:\\Users\\Thangasamy\\BLOCK STACK PRIVATE LIMITED\\DB_Code_Point - Documents\\MCP SERVER\\Claude-Desktop-to-PostgreSQL-main"
+            }
+        }
+    }
+}
