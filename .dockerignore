@@ -1,0 +1,11 @@
+.venv
+__pycache__
+**/__pycache__
+.env
+.git
+.gitignore
+.sixth
+Output_Images
+README.md
+test_connection.py
+claude_desktop_config.json

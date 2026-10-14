@@ -55,7 +55,7 @@ async def get_pool() -> asyncpg.Pool:
             port=DB_CONFIG["port"],
             database=DB_CONFIG["database"],
             user=DB_CONFIG["user"],
-            password=DB_CONFIG["password"],
+            password=DB_CONFIG["password"] or None,
             min_size=DB_CONFIG["min_size"],
             max_size=DB_CONFIG["max_size"],
             command_timeout=60,
